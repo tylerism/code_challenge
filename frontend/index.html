@@ -1,0 +1,97 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ICANHAZCODINGCHALLENGE</title>
+<link type="text/css" href="style.css" rel="stylesheet" />
+<link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+
+<script type="application/javascript" src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+<script type="application/javascript" src="http://code.jquery.com/ui/1.10.3/jquery-ui.min.js"></script>
+
+<script>
+	$(document).ready(function(){
+		var page = 1;
+		var request = $.ajax({
+		  url:'http://icanhazcodingchallenge.com/read',
+		})
+		request.done(function(resp){
+			var temp = "";
+			var data = resp.data.links;
+			for(var i=0;i<data.length;i++){
+				temp += "<li data-code='"+data[i].code+"'><a href='http://icanhazcodingchallenge.com/"+data[i].code+"'>"+data[i].url+"</a><button class='view_stats'>view stats</button></li>";
+
+			}
+			$('#links').append(temp);
+		});
+		$('#load_more').click(function(){
+			page++;
+			var request = $.ajax({
+			  url:'http://icanhazcodingchallenge.com/read',
+			  data:{page:page}
+			});
+			
+			request.done(function(resp){
+				var temp = "";
+				var data = resp.data.links;
+				for(var i=0;i<data.length;i++){
+					temp += "<li data-code='"+data[i].code+"'><a href='http://icanhazcodingchallenge.com/"+data[i].code+"'>"+data[i].url+"</a><button class='view_stats'>view stats</button></li>";
+
+				}
+				$('#links').append(temp);
+			});
+		});
+		$('#createUrl').submit(function(event){
+			event.preventDefault();
+			var url = $("#url").val();
+			var request = $.ajax({
+			  url:'http://icanhazcodingchallenge.com/create',
+			  data:{url:url},
+			  method:'POST'
+			})
+			request.done(function(resp){
+				location.reload();
+			});
+		});
+		$('#links').on('click','.view_stats',function(){
+			var code = $(this).parent().data('code');
+			var getting = ['day','week','all'];
+			
+			for(var i=0;i<getting.length;i++){
+				var request = $.ajax({
+					url:'http://icanhazcodingchallenge.com/read',
+					data:{code:code,range:getting[i]}
+				})
+				request.done(function(resp){
+					$('#'+resp.data.range+'_count').text(resp.data.count);
+				});
+			}
+			$('#stats').show();
+		});
+	});
+</script>
+</head>
+<body>
+		<div class="container">
+			<h2>ICANHAZ - URL Shortener</h2>
+	 		<form method="post" action="/create" id="createUrl">	 			
+				<input type="text" name="url" id="url" placeholder="Enter a URL to shorten"/>
+				<input type="submit"/>				
+			</form>
+			<div id="stats">
+				<h3>Views in: </h3>
+				<div>24 hours:<span id="day_count"></span></div>
+				<div>1 week: <span id="week_count"></span></div>
+				<div>All time: <span id="all_count"></span></div>
+			</div>
+			<ul id="links">
+			</ul>
+			<button id="load_more">Load more</button>
+		</div>
+		
+</body>
+</html>
+
