@@ -65,11 +65,22 @@
 			}
 			
 			// Retrieve the links by either the code or the URL. If code AND url are specified, it ignores the url param
-			if($code){		
-				$sql="SELECT * from click left join link on link.code = click.code where click.code='$code'" . $add;
+			$link = false;
+			if($code){						
+				$sql="SELECT click.* from click left join link on link.code = click.code where click.code='$code'" . $add;
+				$linkSql="SELECT * from link where link.code = '$code'";
+				if ($result=mysqli_query($con,$linkSql)){
+					while($row = $result->fetch_assoc()) {
+						$link = $row;
+					}
+				}
+				if(!$link){
+					http_response_code(400);
+					$this->returnJsonResponse(['status'=>'fail','message'=>'not a valid code']);
+				}			
 			}
 			elseif($url){
-				$sql="SELECT * from click left join link on link.code = click.code where link.url='$url'" . $add;
+				$sql="SELECT click.* from click left join link on link.code = click.code where link.url='$url'" . $add;
 			}
 			else{
 				// Limiting 10 per page to account for potentially millions of urls
@@ -88,15 +99,17 @@
 				} else {
 					$rows = [];
 				}
-				
-				$data['status'] = "success";
-				
+							
 				if($code || $url){
-					$data['data'] = ['count'=>count($rows),'clicks'=>$rows,'range'=>$range];		
+					$data['data'] = ['count'=>count($rows),'clicks'=>$rows,'range'=>$range];	
+					if($link){
+						$data['data']['link'] = $link;
+					}	
 				}
 				else{
 					$data['data'] = ['count'=>count($rows),'links'=>$rows];
-				}			
+				}		
+				$data['status'] = "success";	
 				$this->returnJsonResponse($data);
 			}		
 		}
