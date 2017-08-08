@@ -124,7 +124,7 @@
 			$this->$action();
 		}
 		
-		//
+		// Return a JSON Response
 		public function returnJsonResponse($data){
 			header('Content-Type: application/json');
 			header('Access-Control-Allow-Origin: *');
